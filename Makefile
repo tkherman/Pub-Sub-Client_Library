@@ -1,5 +1,5 @@
 CXX             = g++
-CXXFLAGS        = -g -std=gnu++11 -Wall -Iinclude #-DNDEBUG=1
+CXXFLAGS        = -g -gdwarf-2 -std=gnu++11 -Wall -Iinclude #-DNDEBUG=1
 LD              = g++
 LDFLAGS         = -Llib
 LNKFLAGS        = -lpthread
@@ -37,11 +37,11 @@ all:            $(TARGETS)
 $(CLIENT):      $(CLIENT_OBJECTS)
 	$(AR) $(ARFLAGS) $@ $^
 
-$(UNIT):    	$(UNIT_OBJECTS)
-	$(LD) $(UNIT_FLAGS) -o $@ $^ $(LDFLAGS) $(UNIT_LNK_FLAGS)
+$(UNIT):    	$(UNIT_OBJECTS) $(GTEST)
+	$(LD) $(UNIT_FLAGS) -o $@ $(UNIT_OBJECTS) $(LDFLAGS) $(UNIT_LNK_FLAGS)
 
-$(ECHO):        $(ECHO_OBJECTS)
-	$(LD) $(ECHO_FLAGS) -o $@ $^ $(LDFLAGS) $(ECHO_LNK_FLAGS)
+$(ECHO):        $(ECHO_OBJECTS) $(CLIENT)
+	$(LD) $(ECHO_FLAGS) -o $@ $(ECHO_OBJECTS) $(LDFLAGS) $(ECHO_LNK_FLAGS)
 
 $(GTEST):	contrib/gtest
 	(mkdir build; cd build; cmake ../contrib/gtest; make)
