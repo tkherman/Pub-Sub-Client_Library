@@ -1,10 +1,14 @@
 // echo_test.cpp ---------------------------------------------------------------
 
-#include <ps_client/client.h>
-
+// SYSTEM INCLUDES
+#include <cstdlib>
+#include <cstdio>
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+
+// C++ PROJECT INCLUDES
+#include <ps_client/client.h>
 
 // Constants -------------------------------------------------------------------
 
