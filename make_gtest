@@ -1,0 +1,10 @@
+#!/bin/bash
+
+if [[ ! -e build ]]; then
+    mkdir build
+    cd build
+    cmake ../gtest
+    make
+    cd ..
+fi
+

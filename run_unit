@@ -1,0 +1,4 @@
+#!/bin/bash
+
+./bin/client_unit
+
