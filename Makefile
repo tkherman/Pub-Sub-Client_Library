@@ -38,16 +38,25 @@ $(CLIENT):      $(CLIENT_OBJECTS)
 	$(AR) $(ARFLAGS) $@ $^
 
 $(UNIT):    	$(UNIT_OBJECTS) $(GTEST)
-	$(LD) $(UNIT_FLAGS) -o $@ $(UNIT_OBJECTS) $(LDFLAGS) $(UNIT_LNK_FLAGS)
+	$(LD) -o $@ $(UNIT_OBJECTS) $(LDFLAGS) $(UNIT_LNK_FLAGS)
 
 $(ECHO):        $(ECHO_OBJECTS) $(CLIENT)
-	$(LD) $(ECHO_FLAGS) -o $@ $(ECHO_OBJECTS) $(LDFLAGS) $(ECHO_LNK_FLAGS)
+	$(LD) -o $@ $(ECHO_OBJECTS) $(LDFLAGS) $(ECHO_LNK_FLAGS)
 
 $(GTEST):	contrib/gtest
 	(mkdir build; cd build; cmake ../contrib/gtest; make)
 
-%.o:            %.cpp   $(wildcard include/*/*.h)
+src/client/%.o: src/client/%.cpp $(wildcard include/ps_client/*.h)
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+src/server/%.o: src/server/%.cpp $(wildcard include/ps_server/*.h)
+	$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+src/tests/%.o: 	src/tests/%.cpp $(wildcard include/ps_client/*.h)
+	$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+src/unit/%.o: 	src/unit/%.cpp $(wildcard include/ps_client/*.h)
+	$(CXX) $(CXXFLAGS) $(UNIT_FLAGS) -o $@ -c $<
 
 clean:
 	rm -fr build $(TARGETS) $(CLIENT_OBJECTS) $(ECHO_OBJECTS) $(UNIT_OBJECTS)
