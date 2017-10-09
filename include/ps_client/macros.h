@@ -8,20 +8,17 @@
         exit(EXIT_FAILURE); \
     }
 
-#define Pthread_mutex_init(l, a) \
-    PTHREAD_CHECK(pthread_mutex_init(l, a));
+#define SEM_CHECK(f) \
+    if ((rc = (f)) != 0) { \
+        cerr << strerror(rc) << endl; \
+        exit(EXIT_FAILURE); \
+    }
 
-#define Pthread_mutex_lock(l) \
-    PTHREAD_CHECK(pthread_mutex_lock((pthread_mutex_t *)(l)));
+#define Sem_init(s, p, v) \
+    SEM_CHECK(sem_init(s, p, v));
 
-#define Pthread_mutex_unlock(l) \
-    PTHREAD_CHECK(pthread_mutex_unlock((pthread_mutex_t *)(l)));
+#define Sem_wait(s) \
+    SEM_CHECK(sem_wait(s));
 
-#define Pthread_cond_init(c, a) \
-    PTHREAD_CHECK(pthread_cond_init((c), (a)));
-
-#define Pthread_cond_wait(c, l) \
-    PTHREAD_CHECK(pthread_cond_wait((c), (l)));
-
-#define Pthread_cond_signal(c) \
-    PTHREAD_CHECK(pthread_cond_signal((pthread_cond_t *)(c)));
+#define Sem_post(s) \
+    SEM_CHECK(sem_post(s));
