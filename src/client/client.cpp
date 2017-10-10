@@ -2,7 +2,8 @@
  * Implementation of the Client class
  */
 
-#include "client.h"
+#include "../../include/ps_client/client.h"
+#include "../../include/ps_client/message.h"
 #include <iostream>
 #include <string>
 #include <cstring>
@@ -40,17 +41,17 @@ void Client::publish(const char* topic, const char* message, size_t length) {
 void Client::subscribe(const char *topic, Callback *callback) {
 	std::string msg = "SUBSCRIBE ";
 	msg.append(topic);
-	msg.append('\n');
+	msg += "\n";
 	send_queue.push(msg);
 
-	std::string topic_string = string(topic);
+	std::string topic_string = std::string(topic);
     topic_map[topic_string] = callback;
 }
 
 void Client::unsubscribe(const char *topic) {
 	std::string msg = "UNSUBSCRIBE ";
 	msg.append(topic);
-	msg.append('\n');
+	msg += "\n";
 	send_queue.push(msg);
 }
 
@@ -60,8 +61,8 @@ void Client::disconnect() {
 	std::string msg = "DISCONNECT ";
 	msg.append(client_id);
 	msg += " with ";
-	msg += to_string(nonce);
-	mst += "\n";
+	msg += std::to_string(nonce);
+	msg += "\n";
 	send_queue.push(msg);
 
 	/* set disconnect flag to true - used in shutdown() */
@@ -77,6 +78,7 @@ void Client::run() {
 bool Client::shutdown() {
 	return have_disconnected;
 }
+
 
 // GET METHODS
 
@@ -104,6 +106,6 @@ Queue<Message>* Client::get_recv_queue() {
 	return &recv_queue;
 }
 
-std::unordered_map<std::string, Callback*>* get_topic_map() {
+std::unordered_map<std::string, Callback*>* Client::get_topic_map() {
 	return &topic_map;
 }

@@ -5,9 +5,12 @@
 #include "queue.h"
 #include "thread.h"
 #include "callback.h"
+#include "message.h"
 
 #include <string>
+#include <unordered_map>
 #include <ctime>
+
 using std::cout; using std::cerr; using std::endl;
 
 #define info_log(M) \
@@ -15,16 +18,6 @@ using std::cout; using std::cerr; using std::endl;
 
 #define error_log(M) \
     std::cout << "[" << time(NULL) << "] ERROR " << M << std::endl;
-
-/* Struct Declaration */
-
-struct Message {
-   	std::string type        // Message type (MESSAGE, IDENTIFY, SUBSCRIBE, UNSUBSCRIBE, RETRIEVE, DISCONNECT)
-	std::string topic       // Message topic
-	std::string sender      // Message sender
-	size_t      nonce       // Sender's nonce
-	std::string body        // Message body 
-};
 
 
 /* Function Declaration */
@@ -64,5 +57,5 @@ class Client {
         const char*         get_port();
         Queue<std::string>* get_send_queue();
         Queue<Message>*     get_recv_queue();
-        std::unordered_map<std::string, Callback*> get_topic_map();
+        std::unordered_map<std::string, Callback*>* get_topic_map();
 };

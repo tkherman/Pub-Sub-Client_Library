@@ -6,7 +6,13 @@
 #include <string.h>
 #include <sstream>
 
-int get_info(char *host, char *port, struct addrinfo *&servinfo) {
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
+
+#include <unistd.h>
+
+int get_info(const char *host, const char *port, struct addrinfo *&servinfo) {
     struct addrinfo hints;
     memset(&hints, 0, sizeof(hints));
     hints.ai_family = AF_UNSPEC;
@@ -17,7 +23,7 @@ int get_info(char *host, char *port, struct addrinfo *&servinfo) {
     }
 }
 
-int socket_dial(char * host, char * port) {
+int socket_dial(const char * host, const char * port) {
     int sockfd; // socket file descriptor
     struct addrinfo *servinfo;
 	
@@ -31,7 +37,7 @@ int socket_dial(char * host, char * port) {
         if ((sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
             continue;
         }
-		if (bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0) {
+		if (bind(sockfd, (struct sockaddr *) servinfo, sizeof(servinfo)) < 0) {
 			close(sockfd);
 			continue;
 		}
@@ -50,7 +56,7 @@ int socket_dial(char * host, char * port) {
     freeaddrinfo(servinfo);
 
     /* Connected to Server */
-    debug("Connected to server on socket: ", sockfd);
+    cout << "Connected to server on socket: " <<  sockfd << endl;;
 
 	return sockfd;
 }
@@ -64,6 +70,7 @@ Message to_message(std::string input, Client * client) {
 	std::stringstream ss;
 	std::vector<std::string> message_vec;
 	while(ss) {
+		std::string field;
 		ss >> field;
 		message_vec.push_back(field);
 	}
@@ -73,7 +80,7 @@ Message to_message(std::string input, Client * client) {
 	result.topic = message_vec[1];
 	result.sender = message_vec[3];
 	result.size = stoi(message_vec[5]);
-	result.nonce = client->nonce;
+	result.nonce = client->get_nonce();
 	return result;
 }
 
