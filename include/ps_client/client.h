@@ -31,7 +31,7 @@ struct Message {
 
 void *publisher(void *arg);
 void *retriever(void *arg);
-void *processer(void *arg);
+void *processor(void *arg);
 
 /* Class Declaration */
 
@@ -52,16 +52,16 @@ class Client {
     public:
         Client(const char* host, const char* port, const char* cid);
         ~Client();
-        void publish(const char* topic, const char* message, size_t length);
-        void subscribe(const char *topic, Callback *callback);
-        void unsubscribe(const char *topic);
-        void disconnect();
-        void run();
-        bool shutdown();
-        const char* get_nonce();
-        const char* get_client_id();
-        const char* get_host();
-        const char* get_port;
+        void                publish(const char* topic, const char* message, size_t length);
+        void                subscribe(const char *topic, Callback *callback);
+        void                unsubscribe(const char *topic);
+        void                disconnect();
+        void                run();
+        bool                shutdown();
+        size_t              get_nonce();
+        const char*         get_client_id();
+        const char*         get_host();
+        const char*         get_port;
         Queue<std::string>* get_send_queue();
         Queue<Message>* get_recv_queue();
 };
