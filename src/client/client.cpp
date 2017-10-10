@@ -11,6 +11,7 @@ Client::Client(const char *host, const char *port, const char *cid) {
 	this->host = host;
 	this->nonce = cid;
 	this->port = port;
+	this->have_disconnected = false;
 
 	//TODO - figure out what else to put here
 }
@@ -44,6 +45,7 @@ void Client::disconnect() {
 	std::string msg = "DISCONNECT ";
 	//TODO - figure out what the USER ID is
 	send_queue.push(msg);
+	have_disconnected = true;
 }
 
 void Client::run() {
@@ -52,6 +54,5 @@ void Client::run() {
 }
 
 void Client::shutdown() {
-//TODO see if slack helps
-
+	return have_disconnected;
 }

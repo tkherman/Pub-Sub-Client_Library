@@ -66,6 +66,7 @@ class Client {
         Queue<std::string>  send_queue;
         Queue<std::string>  recv_queue;
         std::unordered_map<std::string, Callback*> topic_map;
+		bool				have_disconnected;
 
     public:
         Client(const char* host, const char* port, const char* cid);
