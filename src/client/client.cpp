@@ -77,3 +77,34 @@ void Client::run() {
 void Client::shutdown() {
 	return have_disconnected;
 }
+
+
+// GET METHODS
+
+size_t Client::get_nonce() {
+	return nonce;
+}
+
+const char * Client::get_client_id() {
+	return client_id;
+}
+
+const char * Client::get_host() {
+	return host;
+}
+
+const char * Client::get_port() {
+	return port;
+}
+
+Queue<std::string>* Client::get_send_queue() {
+	return &send_queue;
+}
+
+Queue<Message>* Client::get_recv_queue() {
+	return &recv_queue;
+}
+
+std::unordered_map<std::string, Callback*>* get_topic_map() {
+	return &topic_map;
+}
