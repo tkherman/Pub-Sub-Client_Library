@@ -74,6 +74,34 @@ void Client::run() {
 }
 
 /* used to notify threads whether or not to shut down */
-void Client::shutdown() {
+bool Client::shutdown() {
 	return have_disconnected;
+}
+
+size_t Client::get_nonce() {
+    return nonce;
+}
+
+const char* Client::get_client_id() {
+    return client_id;
+}
+
+const char* Client::get_host() {
+    return host;
+}
+
+const char* Client::get_port() {
+    return port;
+}
+
+Queue<std::string>* get_send_queue() {
+    return &send_queue;
+}
+
+Queue<Message>* get_recv_queue() {
+    return &recv_queue;
+}
+
+std::unordered_map<std::string, Callback*>* get_topic_map() {
+    return &topic_map;
 }

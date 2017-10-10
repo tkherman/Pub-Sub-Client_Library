@@ -148,5 +148,13 @@ void* retriever(void *arg) {
 
 void* processor(void *arg) {
     Client *client = (Client *)arg;
-    
+    Message msg;
+
+    while (true) {
+        msg = client->get_recv_queue()->pop();
+
+        /* Get Callback object associated with the topic */
+        Callback *obj = *(client->get_topic_map())[msg->topic]
+        obj->run(&msg);
+    }
 }
