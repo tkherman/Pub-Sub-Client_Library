@@ -4,6 +4,7 @@
 #include "ps_client/macros.h"
 #include <cstdlib>
 #include <string.h>
+#include <sstream>
 
 int get_info(char *host, char *port, struct addrinfo *&servinfo) {
     struct addrinfo hints;
@@ -52,6 +53,28 @@ int socket_dial(char * host, char * port) {
     debug("Connected to server on socket: ", sockfd);
 
 	return sockfd;
+}
+
+
+/* this function converts a string to a Message 
+ * it only works for MESSAGE messages and is used in
+ * the receiver function
+ */
+Message to_message(std::string input, Client * client) {
+	std::stringstream ss;
+	std::vector<std::string> message_vec;
+	while(ss) {
+		ss >> field;
+		message_vec.push_back(field);
+	}
+
+	Message result;
+	result.type = message_vec[0];
+	result.topic = message_vec[1];
+	result.sender = message_vec[3];
+	result.size = stoi(message_vec[5]);
+	result.nonce = client->nonce;
+	return result;
 }
 
 
@@ -127,21 +150,33 @@ void* retriever(void *arg) {
         }
         
 		 /* read first line of response */
+		 Message response_msg;
 		 FILE * response_fp = fdopen(fd, "r"); 
 		 char resp_buff[100];
 		 std::string response;
 		 if(fgets(resp_buff, 100, response_fp) != NULL) {
 		 	response = std::string(resp_buff);
-
+			response_msg = to_message(resp_string);
 		 } else {
             error_log("Failed to receive response from server");
 			fclose(response_fp);
 			close(fd);
 		 }
+
+		 /* read remainder of response */
+		 std::string body = "";
+		 char buff[BUFSIZ];
+		 while(fgets(buff, BUFSIZ-1, response_fp) != NULL) {
+			body += std::string(buff);
+		 }
+		 
+		 /* add body to message and push to receive queue */
+		 response_msg.body = body;
+		 client->get_recv_queue.push(response_msg);
         
         if (client->shutdown()) break;
 
-        message = client->send_queue.pop();
+        message = client->get_send_queue.pop();
     }
 
 }
