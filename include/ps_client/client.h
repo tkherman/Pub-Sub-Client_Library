@@ -37,9 +37,9 @@ class Client {
         Client(const char* host, const char* port, const char* cid);
         ~Client();
         void publish(const char* topic, const char* message, size_t length);
-        void Client::subscribe(const char *topic, Callback *callback);
-        void Client::unsubscribe(const char *topic);
-        void Client::disconnect();
-        void Client::run();
-        bool Client::shutdown();
+        void subscribe(const char *topic, Callback *callback);
+        void unsubscribe(const char *topic);
+        void disconnect();
+        void run();
+        bool shutdown();
 };
