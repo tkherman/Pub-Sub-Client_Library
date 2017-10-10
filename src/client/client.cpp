@@ -8,6 +8,7 @@
 #include <string>
 #include <cstring>
 #include <sys/time.h>
+#include <pthread.h>
 
 
 /* Local function to retrieve the current time */
@@ -76,7 +77,13 @@ void Client::run() {
 
 /* used to notify threads whether or not to shut down */
 bool Client::shutdown() {
-	return have_disconnected;
+	pthread_mutex_t lock;  // Declare lock
+	pthread_mutex_init(&lock, NULL);
+	pthread_mutex_lock(&lock); //grab lock
+	bool do_shutdown = have_disconnected; //critical section
+	pthread_mutex_unlock(&lock);
+	
+	return do_shutdown;
 }
 
 
