@@ -59,20 +59,22 @@ void* publisher(void *arg) {
     Client *client = (Client *) arg;
     
     /* Connect a socket to server */
-    int fd = socket_dial(client->host, client->port);
+    int fd = socket_dial(client->get_host(), client->get_port());
     if (fd == -1) {
         error_log("Failing to connect to server");
         exit(EXIT_FAILURE);
     }
     
     /* Prepare for identifying client */
-    std::string message = "IDENTIFY " + std::string(client->client_id) + " " + std::string(client->nonce);
+    std::string message = "IDENTIFY " + std::string(client->get_client_id) + 
+                            " " + client->get_nonce;
     int numbytes;
+    char buf[BUFSIZ];
     
     /* Continuous sent message to server if there's messages in send_queue */
     while (true) {
         if ((numbytes = send(fd, message.c_str(), message.size(), 0)) == -1) {
-            error_log("Failing to send message to server");
+            error_log("Failing to send message to server for publishing");
             exit(EXIT_FAILURE);
         }
         
@@ -80,32 +82,47 @@ void* publisher(void *arg) {
             buf[numbytes] = '\0';
             info_log(M);
         } else if (numbytes == -1) {
-            error_log("Failing to receive response from server");
+            error_log("Failing to receive response from server for publishing");
         }
         
-        if (client->shutdown()) break;
+        if (client->shutdown()) {
+            info_log("Publisher: exiting");
+            break;
+        }
 
-        message = client->send_queue.pop();
+        message = client->get_send_queue->pop();
     }
 }
 
 void* retriever(void *arg) {
-    retriever_arg *ra = (retriever_arg *) arg;
+    Client *client = (Client *) arg;
 
     /* Connect a socket to server */
-    int fd = socket_dial(ra->host, ra->port);
+    int fd = socket_dial(client->get_host(), client->port());
     if (fd == -1) {
         error_log("Failing to connect to server");
         exit(EXIT_FAILURE);
     }
     
     /* Prepare for identifying client */
-    std::string message = "IDENTIFY " + std::string(ra->client_id) + " " + std::string(ra->nonce);
+    std::string message = "IDENTIFY " + std::string(client->get_client_id()) + 
+                            " " + client->get_nonce();
     int numbytes;
+    char buf[BUFSIZ];
 
     /* Continuous retrieve message from server and push message into recv_queue */
-
-
-    
-
+    while (true) {
+        if ((numbytes = send(fd, message.c_str(), message.size(), 0)) == -1) {
+            error_log("Failing to send message to server for retrieving");
+            exit(EXIT_FAILURE);
+        }
+        
+        if ((numbytes = recv(fd, buf, BUFSIZ, 0)) > 0) {
+            buf[numbytes] = '\0';
+            client->get_recv_queue->push(std::string(buf));
+        } else if (numbytes == 0) {
+            info_log("Subscriber: exiting");
+            break;
+        }
+    }
 }
