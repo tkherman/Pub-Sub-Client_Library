@@ -63,5 +63,6 @@ class Client {
         const char*         get_host();
         const char*         get_port;
         Queue<std::string>* get_send_queue();
-        Queue<std::string>* get_recv_queue();
+        Queue<Message>*     get_recv_queue();
+        std::unordered_map<std::string, Callback*>* get_topic_map();
 };

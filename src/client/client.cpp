@@ -43,7 +43,8 @@ void Client::subscribe(const char *topic, Callback *callback) {
 	msg.append('\n');
 	send_queue.push(msg);
 
-	//TODO figure out what to do with the callback
+	std::string topic_string = string(topic);
+    topic_map[topic_string] = callback;
 }
 
 void Client::unsubscribe(const char *topic) {

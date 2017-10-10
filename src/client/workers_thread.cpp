@@ -126,3 +126,8 @@ void* retriever(void *arg) {
         }
     }
 }
+
+void* processor(void *arg) {
+    Client *client = (Client *)arg;
+    
+}
