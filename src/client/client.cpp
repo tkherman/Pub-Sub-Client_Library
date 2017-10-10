@@ -2,8 +2,9 @@
  * Implementation of the Client class
  */
 
-#include "../../include/ps_client/client.h"
-#include "../../include/ps_client/message.h"
+#include "ps_client/client.h"
+#include "ps_client/macros.h"
+
 #include <iostream>
 #include <string>
 #include <cstring>
@@ -26,6 +27,10 @@ Client::Client(const char *host, const char *port, const char *cid) {
 	this->port = port;
 	this->have_disconnected = false;
 	this->nonce = getCurrentTime();
+    
+    int rc;
+    Pthread_mutex_init(&(this->sd_lock), NULL);
+    Pthread_mutex_init(&(this->cb_lock), NULL);
 }
 
 void Client::publish(const char* topic, const char* message, size_t length) {
@@ -44,9 +49,12 @@ void Client::subscribe(const char *topic, Callback *callback) {
 	msg.append(topic);
 	msg += "\n";
 	send_queue.push(msg);
-
+    
+    int rc;
 	std::string topic_string = std::string(topic);
+    Pthread_mutex_lock(&(this->cb_lock));
     topic_map[topic_string] = callback;
+    Pthread_mutex_lock(&(this->cb_lock));
 }
 
 void Client::unsubscribe(const char *topic) {
@@ -56,9 +64,9 @@ void Client::unsubscribe(const char *topic) {
 	send_queue.push(msg);
 }
 
-/* adds the DISCONNECT message to the queue */
+/* Adds the DISCONNECT message to the queue */
 void Client::disconnect() {
-	/* construct the disconnect message and add to queue */
+	/* Construct the disconnect message and add to send_queue */
 	std::string msg = "DISCONNECT ";
 	msg.append(client_id);
 	msg += " with ";
@@ -66,23 +74,37 @@ void Client::disconnect() {
 	msg += "\n";
 	send_queue.push(msg);
 
-	/* set disconnect flag to true - used in shutdown() */
+	/* Set disconnect flag to true - used in shutdown() */
+    int rc;
+    Pthread_mutex_lock(&(this->sd_lock));
 	have_disconnected = true;
+    Pthread_mutex_unlock(&(this->sd_lock));
+
+    /* Construct a disconnect message struct and add to recv_queue */
+    Message msg_struct;
+    msg_struct.type = "DISCONNECT";
+    recv_queue.push(msg_struct);
 }
 
 void Client::run() {
 //TODO - NEED THREADS FUNCTIONS
+    pub_thread.start(publisher, this);
+    pub_thread.detach();
+
+    ret_thread.start(retriever, this);
+    ret_thread.detach();
+
+    proc_thread.start(processor, this);
+    proc_thread.detach();
 
 }
 
-/* used to notify threads whether or not to shut down */
+/* Used to notify threads whether or not to shut down */
 bool Client::shutdown() {
-	pthread_mutex_t lock;  // Declare lock
-	pthread_mutex_init(&lock, NULL);
-	pthread_mutex_lock(&lock); //grab lock
+    int rc;
+	Pthread_mutex_lock(&(this->sd_lock)); //grab lock
 	bool do_shutdown = have_disconnected; //critical section
-	pthread_mutex_unlock(&lock);
-	
+	pthread_mutex_unlock(&(this->sd_lock));
 	return do_shutdown;
 }
 
@@ -113,6 +135,10 @@ Queue<Message>* Client::get_recv_queue() {
 	return &recv_queue;
 }
 
-std::unordered_map<std::string, Callback*>* Client::get_topic_map() {
-	return &topic_map;
+std::unordered_map<std::string, Callback*> Client::get_topic_map() {
+    int rc;
+	Pthread_mutex_lock(&(this->cb_lock));
+    std::unordered_map<std::string, Callback*> result = topic_map;
+    Pthread_mutex_unlock(&(this->cb_lock));
+    return result;
 }

@@ -2,14 +2,16 @@
 
 #pragma once
 
-#include "queue.h"
-#include "thread.h"
-#include "callback.h"
-#include "message.h"
+#include "ps_client/queue.h"
+#include "ps_client/thread.h"
+#include "ps_client/callback.h"
+#include "ps_client/message.h"
 
 #include <string>
 #include <unordered_map>
 #include <ctime>
+
+#include <pthread.h>
 
 using std::cout; using std::cerr; using std::endl;
 
@@ -41,10 +43,12 @@ class Client {
         Queue<Message>  recv_queue;
         std::unordered_map<std::string, Callback*> topic_map;
 		bool				have_disconnected;
+        pthread_mutex_t     sd_lock;
+        pthread_mutex_t     cb_lock;
 
     public:
         Client(const char* host, const char* port, const char* cid);
-        ~Client();
+        ~Client() {}
         void                publish(const char* topic, const char* message, size_t length);
         void                subscribe(const char *topic, Callback *callback);
         void                unsubscribe(const char *topic);
@@ -57,5 +61,5 @@ class Client {
         const char*         get_port();
         Queue<std::string>* get_send_queue();
         Queue<Message>*     get_recv_queue();
-        std::unordered_map<std::string, Callback*>* get_topic_map();
+        std::unordered_map<std::string, Callback*> get_topic_map();
 };

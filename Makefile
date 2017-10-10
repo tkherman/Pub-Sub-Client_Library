@@ -18,7 +18,7 @@ CLIENT          = lib/libps_client.a
 # These are macros to build the functional test. This test is just the ability
 # to send a message to the server, and for it to "echo" it back to the client.
 ECHO_LNK_FLAGS  = $(LNKFLAGS) -lps_client
-ECHO_SOURCE     = $(wildcard src/tests/*.cpp)
+ECHO_SOURCE     = $(wildcard src/tests/echo_test.cpp)
 ECHO_OBJECTS    = $(ECHO_SOURCE:.cpp=.o)
 ECHO            = bin/echo_test
 

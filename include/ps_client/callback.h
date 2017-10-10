@@ -8,8 +8,10 @@
 using std::cout; using std::cerr; using std::endl;
 
 class Callback {
-public:
-	void run(Message &m);
+    public:
+        void run(Message &m) {
+            return;
+        }
 };
 
 class EchoCallback : public Callback {
