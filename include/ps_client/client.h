@@ -26,7 +26,7 @@ struct Message {
 	std::string body        // Message body 
 };
 
-struct publisher_arg {
+/*struct publisher_arg {
     const char*             nonce;
     const char*             client_id;
     const char*             host;
@@ -44,7 +44,7 @@ struct retriever_arg {
 
 struct processor_arg {
     Queue<std::string>*     recv_queue;
-}
+}*/
 
 /* Function Declaration */
 
