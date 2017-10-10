@@ -74,10 +74,9 @@ void Client::run() {
 }
 
 /* used to notify threads whether or not to shut down */
-void Client::shutdown() {
+bool Client::shutdown() {
 	return have_disconnected;
 }
-
 
 // GET METHODS
 
