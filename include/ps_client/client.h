@@ -45,7 +45,7 @@ class Client {
         Thread              ret_thread;
         Thread              proc_thread;
         Queue<std::string>  send_queue;
-        Queue<std::string>  recv_queue;
+        Queue<Message>  recv_queue;
         std::unordered_map<std::string, Callback*> topic_map;
 		bool				have_disconnected;
 
