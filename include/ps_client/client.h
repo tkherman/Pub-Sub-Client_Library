@@ -7,7 +7,16 @@
 #include "callback.h"
 
 #include <string>
+#include <ctime>
 using std::cout; using std::cerr; using std::endl;
+
+#define info_log(M) \
+    std::cout << "[" << time(NULL) << "] INFO " << M << std::endl;
+
+#define error_log(M) \
+    std::cout << "[" << time(NULL) << "] ERROR " << M << std::endl;
+
+/* Struct Declaration */
 
 struct Message {
    	std::string type        // Message type (MESSAGE, IDENTIFY, SUBSCRIBE, UNSUBSCRIBE, RETRIEVE, DISCONNECT)
@@ -15,17 +24,42 @@ struct Message {
 	std::string sender      // Message sender
 	size_t      nonce       // Sender's nonce
 	std::string body        // Message body 
+};
+
+struct publisher_arg {
+    const char*             nonce;
+    const char*             client_id;
+    const char*             host;
+    const char*             port;
+    Queue<std::string>*     send_queue;
+};
+
+struct retriever_arg {
+    const char*             nonce;
+    const char*             client_id;
+    const char*             host;
+    const char*             port;
+    Queue<std::string>*     recv_queue;
+};
+
+struct processor_arg {
+    Queue<std::string>*     recv_queue;
 }
+
+/* Function Declaration */
 
 void *publisher(void *arg);
 void *retriever(void *arg);
 void *processer(void *arg);
+
+/* Class Declaration */
 
 class Client {
     private:
         const char*         nonce;
         const char*         host;
         const char*         port;
+        const char*         client_id;
         Thread              pub_thread;
         Thread              ret_thread;
         Thread              proc_thread;
