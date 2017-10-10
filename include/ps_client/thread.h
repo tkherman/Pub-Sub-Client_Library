@@ -8,26 +8,24 @@
 #include <string.h>
 #include <pthread.h>
 
-typedef void*(*thread_func)(void *)
+typedef void*(*thread_func)(void *);
 
 class Thread {
     private:
         pthread_t thread;
 
     public:
-        Thread();
-        ~Thread();
+        Thread() {};
         void start(thread_func func, void* arg) {
             int rc;
             PTHREAD_CHECK(pthread_create(&thread, NULL, func, arg));
         }
-        void join(void **result); {
+        void join(void **result) {
             int rc;
             PTHREAD_CHECK(pthread_join(thread, result));
         }
-
         void detach() {
             int rc;
             PTHREAD_CHECK(pthread_detach(thread));
         }
-}
+};
