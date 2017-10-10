@@ -37,7 +37,7 @@ void *processor(void *arg);
 
 class Client {
     private:
-        std::string         nonce;
+        size_t				nonce;
         const char*         host;
         const char*         port;
         const char*         client_id;
@@ -58,7 +58,7 @@ class Client {
         void                disconnect();
         void                run();
         bool                shutdown();
-        const char*         get_nonce();
+        size_t              get_nonce();
         const char*         get_client_id();
         const char*         get_host();
         const char*         get_port;

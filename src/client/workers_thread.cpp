@@ -67,7 +67,7 @@ void* publisher(void *arg) {
     
     /* Prepare for identifying client */
     std::string message = "IDENTIFY " + std::string(client->get_client_id) + 
-                            " " + client->get_nonce;
+                            " " + std::to_string(client->get_nonce);
     int numbytes;
     char buf[BUFSIZ];
     
@@ -106,7 +106,7 @@ void* retriever(void *arg) {
     
     /* Prepare for identifying client */
     std::string message = "IDENTIFY " + std::string(client->get_client_id()) + 
-                            " " + client->get_nonce();
+                            " " + std::to_string(client->get_nonce());
     int numbytes;
     char buf[BUFSIZ];
 
