@@ -26,25 +26,6 @@ struct Message {
 	std::string body        // Message body 
 };
 
-struct publisher_arg {
-    const char*             nonce;
-    const char*             client_id;
-    const char*             host;
-    const char*             port;
-    Queue<std::string>*     send_queue;
-};
-
-struct retriever_arg {
-    const char*             nonce;
-    const char*             client_id;
-    const char*             host;
-    const char*             port;
-    Queue<std::string>*     recv_queue;
-};
-
-struct processor_arg {
-    Queue<std::string>*     recv_queue;
-}
 
 /* Function Declaration */
 
@@ -77,4 +58,10 @@ class Client {
         void disconnect();
         void run();
         bool shutdown();
+        const char* get_nonce();
+        const char* get_client_id();
+        const char* get_host();
+        const char* get_port;
+        Queue<std::string>* get_send_queue();
+        Queue<std::string>* get_recv_queue();
 };
