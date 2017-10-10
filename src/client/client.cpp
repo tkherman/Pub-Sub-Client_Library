@@ -6,14 +6,24 @@
 #include <iostream>
 #include <string>
 #include <cstring>
+#include <sys/time.h>
+
+
+/* Local function to retrieve the current time */
+uint64_t getCurrentTime() {
+	/* get current time in milliseconds */
+	struct timeval tv;
+	gettimeofday(&tv,NULL);
+	size_t curr_time = 1000 * tv.tv_sec + tv.tv_usec/1000;
+	return curr_time;
+}
 
 Client::Client(const char *host, const char *port, const char *cid) {
 	this->host = host;
-	this->nonce = cid;
+	this->client_id = cid;
 	this->port = port;
 	this->have_disconnected = false;
-
-	//TODO - figure out what else to put here
+	this->nonce = getCurrentTime();
 }
 
 void Client::publish(const char* topic, const char* message, size_t length) {
@@ -32,6 +42,8 @@ void Client::subscribe(const char *topic, Callback *callback) {
 	msg.append(topic);
 	msg.append('\n');
 	send_queue.push(msg);
+
+	//TODO figure out what to do with the callback
 }
 
 void Client::unsubscribe(const char *topic) {
@@ -41,10 +53,17 @@ void Client::unsubscribe(const char *topic) {
 	send_queue.push(msg);
 }
 
+/* adds the DISCONNECT message to the queue */
 void Client::disconnect() {
+	/* construct the disconnect message and add to queue */
 	std::string msg = "DISCONNECT ";
-	//TODO - figure out what the USER ID is
+	msg.append(client_id);
+	msg += " with ";
+	msg += to_string(nonce);
+	mst += "\n";
 	send_queue.push(msg);
+
+	/* set disconnect flag to true - used in shutdown() */
 	have_disconnected = true;
 }
 
@@ -53,6 +72,7 @@ void Client::run() {
 
 }
 
+/* used to notify threads whether or not to shut down */
 void Client::shutdown() {
 	return have_disconnected;
 }

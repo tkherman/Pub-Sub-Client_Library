@@ -56,7 +56,7 @@ void *processer(void *arg);
 
 class Client {
     private:
-        const char*         nonce;
+        size_t				nonce;
         const char*         host;
         const char*         port;
         const char*         client_id;
