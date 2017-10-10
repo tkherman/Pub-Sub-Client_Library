@@ -72,16 +72,24 @@ void* publisher(void *arg) {
     /* Continuous sent message to server if there's messages in send_queue */
     while (true) {
         if ((numbytes = send(fd, message.c_str(), message.size(), 0)) == -1) {
-            error_log("Failing to send message to server");
+            error_log("Failed to send message to server");
+			close(fd);
             exit(EXIT_FAILURE);
         }
         
-        if ((numbytes = recv(fd, buf, BUFSIZ, 0)) > 0) {
-            buf[numbytes] = '\0';
-            info_log(M);
-        } else if (numbytes == -1) {
-            error_log("Failing to receive response from server");
-        }
+		 /* read first line of response */
+		 FILE * response_fp = fdopen(fd, "r"); 
+		 char resp_buff[100];
+		 std::string response;
+		 if(fgets(resp_buff, 100, response_fp) != NULL) {
+		 	//response = std::string(resp_buff);
+			fputs(response);
+		 } else {
+			//TODO check handling of error
+            error_log("Failed to receive response from server");
+			fclose(response_fp);
+			close(fd);
+		 }
         
         if (client->shutdown()) break;
 
@@ -104,6 +112,30 @@ void* retriever(void *arg) {
     int numbytes;
 
     /* Continuous retrieve message from server and push message into recv_queue */
+    while (true) {
+        if ((numbytes = send(fd, message.c_str(), message.size(), 0)) == -1) {
+            error_log("Failed to send message to server");
+			close(fd);
+            exit(EXIT_FAILURE);
+        }
+        
+		 /* read first line of response */
+		 FILE * response_fp = fdopen(fd, "r"); 
+		 char resp_buff[100];
+		 std::string response;
+		 if(fgets(resp_buff, 100, response_fp) != NULL) {
+		 	response = std::string(resp_buff);
+
+		 } else {
+            error_log("Failed to receive response from server");
+			fclose(response_fp);
+			close(fd);
+		 }
+        
+        if (client->shutdown()) break;
+
+        message = client->send_queue.pop();
+    }
 
 
     
