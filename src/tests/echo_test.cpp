@@ -50,7 +50,7 @@ int main(int argc, char *argv[]) {
 
     generator.start(echo_generator, (void *)&client);
     generator.detach();
-
+    
     client.subscribe(ECHO_TOPIC, &e);
     client.run();
 

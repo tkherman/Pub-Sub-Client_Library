@@ -2,8 +2,10 @@
 
 #include "ps_client/queue.h"
 #include "ps_client/thread.h"
+#include "ps_client/macros.h"
 
-const size_t NITEMS = 1000;
+const size_t NITEMS = 200;
+pthread_mutex_t lock;
 
 // Producer Thread
 
@@ -12,7 +14,10 @@ void *producer(void *arg) {
 
     for (size_t i = 0; i < NITEMS; i++) {
     	q->push(i);
+        int rc;
+        Pthread_mutex_lock(&lock);
         std::cout << "putting in " << i << std::endl;
+        Pthread_mutex_unlock(&lock);
     }
 	q->push(-1);
 
@@ -28,8 +33,11 @@ void *consumer(void *arg) {
 
     while (true) {
 		value = q->pop();
-		if (value >= 0)
+		if (value >= 0){
+            int rc;
+            Pthread_mutex_lock(&lock);
             std::cout << value << std::endl;
+            Pthread_mutex_unlock(&lock);}
 		else 
 			break;
     }
@@ -41,9 +49,11 @@ void *consumer(void *arg) {
 int main(int argc, char *argv[]) {
     Queue<int> q;
     Thread t[2];
+    int rc;
+    Pthread_mutex_init(&lock, NULL);
 
-    t[0].start(producer, &q);
     t[1].start(consumer, &q);
+    t[0].start(producer, &q);
 
     size_t result, total = 0;
     for (size_t i = 0; i < 2; i++) {

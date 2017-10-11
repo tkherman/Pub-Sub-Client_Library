@@ -54,7 +54,8 @@ void Client::subscribe(const char *topic, Callback *callback) {
 	std::string topic_string = std::string(topic);
     Pthread_mutex_lock(&(this->cb_lock));
     topic_map[topic_string] = callback;
-    Pthread_mutex_lock(&(this->cb_lock));
+    Pthread_mutex_unlock(&(this->cb_lock));
+
 }
 
 void Client::unsubscribe(const char *topic) {
@@ -87,15 +88,14 @@ void Client::disconnect() {
 }
 
 void Client::run() {
-//TODO - NEED THREADS FUNCTIONS
     pub_thread.start(publisher, this);
-    pub_thread.detach();
-
     ret_thread.start(retriever, this);
-    ret_thread.detach();
-
     proc_thread.start(processor, this);
-    proc_thread.detach();
+
+    int result1, result2, result3;
+    pub_thread.join((void**) &result1);
+    ret_thread.join((void**) &result2);
+    proc_thread.join((void**) &result3);
 
 }
 

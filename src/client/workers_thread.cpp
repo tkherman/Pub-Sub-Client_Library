@@ -13,43 +13,38 @@
 
 #include <unistd.h>
 
-int get_info(const char *host, const char *port, struct addrinfo *&servinfo) {
-    struct addrinfo hints;
-    memset(&hints, 0, sizeof(hints));
-    hints.ai_family = AF_UNSPEC;
-    hints.ai_socktype = SOCK_STREAM;
-    if ((getaddrinfo(host, port, &hints, &servinfo)) != 0) {
-        error_log("Failed getting info: " << strerror(errno));
-        return -1;
-    }
-    return 0;
-}
 
 FILE *socket_dial(const char * host, const char * port) {
-    int sockfd; // socket file descriptor
     struct addrinfo *servinfo;
-    
-    /* fill addrinfo struct */
-    if (get_info(host, port, servinfo) < 0) 
+    struct addrinfo hints;
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_family = AF_UNSPEC;
+
+    int status;
+    if ((status = getaddrinfo(host, port, &hints, &servinfo)) != 0) {
+        error_log("Failed getting addrinfo: " << gai_strerror(status));
         return NULL;
+    }
     
     /* Loop until connected to server */
     struct addrinfo *p;
-    for (p = servinfo; p != NULL; p = p->ai_next) {
+    int sockfd = -1;
+    for (p = servinfo; p != NULL && sockfd < 0; p = p->ai_next) {
         if ((sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
-            continue;
-        }
-        if (bind(sockfd, (struct sockaddr *) servinfo, sizeof(servinfo)) < 0) {
-            close(sockfd);
+            error_log("Unable to make socket: " << strerror(errno));
             continue;
         }
 
         if (connect(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
+            error_log("Unable to connect to " << host << ":" << port << ": " << strerror(errno));
             close(sockfd);
+            sockfd = -1;
             continue;
         }
         break;
     }
+
     /* If failed to connect to server */
     if (p == NULL) {
         error_log("Client failed to connect: " << strerror(errno));
@@ -75,12 +70,13 @@ FILE *socket_dial(const char * host, const char * port) {
  * the receiver function
  */
 Message to_message(std::string input, Client * client, size_t &length) {
-    std::stringstream ss;
+    std::stringstream ss(input);
     std::vector<std::string> message_vec;
-    while(ss) {
-        std::string field;
-        ss >> field;
-        message_vec.push_back(field);
+    std::string temp;
+    ss >> temp;
+    while(!ss.eof()) {
+        message_vec.push_back(temp);
+        ss >> temp;
     }
 
     Message result;
@@ -105,12 +101,12 @@ void* publisher(void *arg) {
     
     /* Prepare for identifying client */
     std::string message = "IDENTIFY " + std::string(client->get_client_id()) + 
-                            " " + std::to_string(client->get_nonce());
+                            " " + std::to_string(client->get_nonce()) + "\n";
     char buf[BUFSIZ];
     
     /* Continuous sent message to server if there's messages in send_queue */
     while (true) {
-        if (fputs(message.c_str(), fd) == EOF) {
+        if (message.size() != fwrite(message.c_str(), 1, message.size(), fd)) {
             error_log("Failed to send message to server in publisher");
             fclose(fd);
             exit(EXIT_FAILURE);
@@ -148,35 +144,59 @@ void* retriever(void *arg) {
     
     /* Prepare for identifying client */
     std::string message = "IDENTIFY " + std::string(client->get_client_id()) + 
-                            " " + std::to_string(client->get_nonce());
+                            " " + std::to_string(client->get_nonce()) + "\n";
     char buf[BUFSIZ];
-
+    if (message.size() != fwrite(message.c_str(), 1, message.size(), fd)) {
+        error_log("Failed to identify in retriever");
+        fclose(fd);
+        exit(EXIT_FAILURE);
+    }
+    
+     /* read first line of response */
+     std::string response;
+     if(fgets(buf, BUFSIZ, fd) != NULL) {
+        info_log(buf);
+     } else {
+        error_log("Failed to receive response from server");
+        fclose(fd);
+     }
+    
     /* Continuous retrieve message from server and push message into recv_queue */
+    message = "RETRIEVE " + std::string(client->get_client_id()) + "\n";
+
     while (true) {
-        if (fputs(message.c_str(), fd) == EOF) {
+
+        if (message.size() != fwrite(message.c_str(), 1, message.size(), fd)) {
             error_log("Failed to send retrieve request to server in retriever");
             fclose(fd);
             exit(EXIT_FAILURE);
         }
 
+        fflush(fd);
+        
         /* Read first line of response */
         Message response_msg;
         std::string response;
         size_t length;
         if(fgets(buf, BUFSIZ, fd) != NULL) {
             response = std::string(buf);
+            debug(response);
             response_msg = to_message(response, client, length);
         } else {
-            error_log("Failed to retrieve response from server");
+            perror("");
+            error_log("Failed to retrieve response from server lol");
             fclose(fd);
             exit(EXIT_FAILURE);
         }
+        debug(length);
 
         /* Read remainder of response */
         std::string body = "";
         if (fgets(buf, length, fd) != NULL) {
             body = std::string(buf);
+            debug(body);
         } else {
+            perror("");
             error_log("Failed to retrieve the body of message from server");
             fclose(fd);
             exit(EXIT_FAILURE);
@@ -185,8 +205,12 @@ void* retriever(void *arg) {
         /* Add body to message and push to receive queue */
         response_msg.body = body;
         client->get_recv_queue()->push(response_msg);
+
         
-        if (client->shutdown()) break;
+        if (client->shutdown()) {
+            info_log("Retriever exiting");
+            break;
+        }
 
     }
 
@@ -209,7 +233,10 @@ void* processor(void *arg) {
         Callback *cb = topic_map[msg.topic];
         cb->run(msg);
 
-        if (client->shutdown()) break;
+        if (client->shutdown()) {
+            info_log("Processor exiting");
+            break;
+        }
     }
 
     return EXIT_SUCCESS;

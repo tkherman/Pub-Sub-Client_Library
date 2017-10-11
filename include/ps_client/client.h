@@ -15,6 +15,9 @@
 
 using std::cout; using std::cerr; using std::endl;
 
+#define debug(M) \
+    std::cerr << "[DEBUG] " << __FILE__ << ":" << __LINE__ << " " << M << std::endl;
+
 #define info_log(M) \
     std::cout << "[" << time(NULL) << "] INFO " << M << std::endl;
 
