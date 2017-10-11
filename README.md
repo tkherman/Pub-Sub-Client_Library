@@ -6,8 +6,8 @@ This is the documentation for [Project 03] of [CSE.30341.FA17].
 Members
 -------
 
-1. Domer McDomerson (dmcdomer@nd.edu)
-2. Belle Fleur (bfleur@nd.edu)
+1. John McGuinness (jmcguin1@nd.edu)
+2. Herman Tong (ktong1@nd.edu)
 
 Design
 ------
