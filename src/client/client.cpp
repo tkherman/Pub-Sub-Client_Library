@@ -70,7 +70,7 @@ void Client::disconnect() {
 	/* Construct the disconnect message and add to send_queue */
 	std::string msg = "DISCONNECT ";
 	msg.append(client_id);
-	msg += " with ";
+	msg += " ";
 	msg += std::to_string(nonce);
 	msg += "\n";
 	send_queue.push(msg);

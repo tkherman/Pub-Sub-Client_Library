@@ -180,21 +180,17 @@ void* retriever(void *arg) {
         size_t length;
         if(fgets(buf, BUFSIZ, fd) != NULL) {
             response = std::string(buf);
-            debug(response);
             response_msg = to_message(response, client, length);
         } else {
-            perror("");
             error_log("Failed to retrieve response from server lol");
             fclose(fd);
             exit(EXIT_FAILURE);
         }
-        debug(length);
 
         /* Read remainder of response */
         std::string body = "";
-        if (fgets(buf, length, fd) != NULL) {
+        if (fgets(buf, length + 1, fd) != NULL) {
             body = std::string(buf);
-            debug(body);
         } else {
             perror("");
             error_log("Failed to retrieve the body of message from server");
@@ -226,13 +222,15 @@ void* processor(void *arg) {
         msg = client->get_recv_queue()->pop();
 
         /* Check if it is time to disconnect */
-        if (msg.type.compare("DISCONNECT") == 0 && client->shutdown()) break;
+        if (msg.type.compare("DISCONNECT") == 0 && client->shutdown()) {
+            info_log("Processor exiting");
+            break;
+        }
 
         /* Get Callback object associated with the topic */
         std::unordered_map<std::string, Callback*> topic_map = client->get_topic_map();
         Callback *cb = topic_map[msg.topic];
         cb->run(msg);
-
         if (client->shutdown()) {
             info_log("Processor exiting");
             break;
